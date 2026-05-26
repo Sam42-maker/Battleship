@@ -1,0 +1,20 @@
+# 1. Gunakan base image Python versi slim (ringan)
+FROM python:3.9-slim
+
+# 2. Tentukan direktori kerja di dalam kontainer
+WORKDIR /app
+
+# 3. Salin file requirements.txt terlebih dahulu
+COPY requirements.txt .
+
+# 4. Install semua dependensi Python (Flask, Redis, Pika, dll)
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 5. Salin seluruh sisa kode backend lokal ke dalam kontainer
+COPY . .
+
+# 6. Beri tahu Docker bahwa kontainer ini akan menggunakan port 5000
+EXPOSE 5000
+
+# 7. Perintah untuk menjalankan server utama
+CMD ["python", "main.py"]
