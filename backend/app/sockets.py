@@ -140,13 +140,11 @@ def handle_socket_events(socketio):
     @socketio.on('rejoin_session')
     def handle_rejoin_session(data):
         room_code = data.get('room_code')
-        if not room_code: room_code = data.get('code') # fallback to 'code' for backward compatibility with older frontend versions
         role = data.get('role')
         if room_code:
             join_room(room_code)
             room_data = get_room(room_code)
             if room_data:
-                # Update Session ID (SID) baru dari koneksi yang ter-refresh
                 if role == 'host' and room_data.get('player1'):
                     room_data['player1']['sid'] = request.sid
                 elif role == 'guest' and room_data.get('player2'):

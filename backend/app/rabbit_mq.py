@@ -1,6 +1,3 @@
-# rabbit_mq.py
-# - Provides RabbitMQ helper to publish multiplayer move data
-# - publish_move: send shot data to battleship_moves queue
 import pika
 import json
 
