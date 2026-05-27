@@ -134,6 +134,21 @@ def handle_socket_events(socketio):
     def handle_player_quit_room(data):
         room_code = data.get('room_code')
         emit('force_quit_lobby', {}, room=room_code, include_self=False)
+        save_room(room_code, None) 
+
+    def handle_rejoin_session(data):
+        room_code = data.get('room_code')
+        role = data.get('role')
+        if room_code:
+            join_room(room_code)
+            room_data = get_room(room_code)
+            if room_data:
+                # Update Session ID (SID) baru dari koneksi yang ter-refresh
+                if role == 'host' and room_data.get('player1'):
+                    room_data['player1']['sid'] = request.sid
+                elif role == 'guest' and room_data.get('player2'):
+                    room_data['player2']['sid'] = request.sid
+                save_room(room_code, room_data)
 
     @socketio.on('fire_shot')
     def handle_shot(data):

@@ -369,7 +369,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   // --- ACTIONS ---
   const handlePlayAgain = () => {
     if (mode === 'SOLO') resetGameSession();
-    else socket.emit('request_rematch', { room_code: roomData.code, role: roomData.role });
+    else socket.emit('player_ready_rematch', { room_code: roomData.code, role: roomData.role });
   };
 
   const resetGameSession = () => {

@@ -4,16 +4,20 @@ import Lobby from './pages/Lobby';
 import socket from './services/socket'; // Import socket
 
 function App() {
-  const [screen, setScreen] = useState('MENU'); // Current screen: MENU, LOBBY, WAITING, GAME
-  const [mode, setMode] = useState(null); 
-  
-  // State to store multiplayer lobby session data
-  const [roomData, setRoomData] = useState({
-    code: '',
-    role: '', // 'host' (Player 1) or 'guest' (Player 2)
-    player1: null,
-    player2: null
+  // UPDATE 2: Membaca memori browser (sessionStorage) agar tahan refresh
+  const [screen, setScreen] = useState(() => sessionStorage.getItem('screen') || 'MENU');
+  const [mode, setMode] = useState(() => sessionStorage.getItem('mode') || null); 
+  const [roomData, setRoomData] = useState(() => {
+    const saved = sessionStorage.getItem('roomData');
+    return saved ? JSON.parse(saved) : { code: '', role: '', player1: null, player2: null };
   });
+
+  // UPDATE 3: Menyimpan data otomatis setiap kali state berubah
+  useEffect(() => {
+    sessionStorage.setItem('screen', screen);
+    sessionStorage.setItem('mode', mode || '');
+    sessionStorage.setItem('roomData', JSON.stringify(roomData));
+  }, [screen, mode, roomData]);
 
   useEffect(() => {
     // === LISTENING FOR BACKEND RESPONSES ===
@@ -36,16 +40,34 @@ function App() {
       setScreen('LOBBY'); // Return to lobby
     });
 
+
     // 3. When Host presses "Start Battle", move everyone to GameRoom
     socket.on('init_placement', (data) => {
-      setScreen('GAME'); 
+      setScreen('GAME');
     });
 
-    // Remove listeners when component unmounts (prevent memory leak)
+    // UPDATE 4: Listener jika musuh Quit dari Waiting Room
+    socket.on('force_quit_lobby', () => {
+      alert("⚠️ enemy has left the lobby. Returning to main menu.");
+      setScreen('LOBBY');
+      setRoomData({ code: '', role: '', player1: null, player2: null });
+    });
+
+    // UPDATE 5: Re-sync ke Backend jika browser tiba-tiba di-refresh
+    socket.on('connect', () => {
+      const savedRoom = JSON.parse(sessionStorage.getItem('roomData') || '{}');
+      if (savedRoom.code && (sessionStorage.getItem('screen') === 'WAITING' || sessionStorage.getItem('screen') === 'GAME')) {
+        socket.emit('rejoin_session', { room_code: savedRoom.code, role: savedRoom.role });
+      }
+    });
+
+    // Remove listeners when component unmounts
     return () => {
       socket.off('room_status');
       socket.off('room_error');
       socket.off('init_placement');
+      socket.off('force_quit_lobby');
+      socket.off('connect');
     };
   }, []);
 
@@ -217,6 +239,19 @@ function App() {
         overflow: 'hidden',
         padding: '20px'
       }}>
+
+        {/* UPDATE 6: Tombol Quit di Kiri Atas Waiting Room */}
+        <button
+          onClick={() => {
+            socket.emit('player_quit_room', { room_code: roomData.code });
+            setScreen('LOBBY');
+            setRoomData({ code: '', role: '', player1: null, player2: null });
+          }}
+          style={{ position: 'absolute', top: 20, left: 20, padding: '10px 20px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 }}
+        >
+          ← QUIT LOBBY
+        </button>
+
         {/* Injeksi Animasi CSS untuk Efek Helikopter Melayang */}
         <style>{`
           @keyframes floatHeli {
@@ -304,7 +339,7 @@ function App() {
           ) : (
             <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', padding: '12px 30px', borderRadius: '8px', border: '1px solid #3b82f6' }}>
               <p style={{ color: '#3b82f6', fontWeight: 'bold', margin: 0, animation: 'pulse 2s infinite' }}>
-                MENUNGGU HOST MEMULAI PERTEMPURAN...
+                Waiting for Host to Start...
               </p>
             </div>
           )}
