@@ -137,6 +137,7 @@ def handle_socket_events(socketio):
         emit('force_quit_lobby', {}, room=room_code, include_self=False)
         save_room(room_code, None) 
 
+    @socketio.on('rejoin_session')
     def handle_rejoin_session(data):
         room_code = data.get('room_code')
         if not room_code: room_code = data.get('code') # fallback to 'code' for backward compatibility with older frontend versions

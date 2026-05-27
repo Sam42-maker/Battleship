@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app) 
 
 app.register_blueprint(routes_bp)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 handle_socket_events(socketio)
 
