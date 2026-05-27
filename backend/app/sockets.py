@@ -9,8 +9,8 @@ def handle_socket_events(socketio):
     
     @socketio.on('create_or_join_room')
     def handle_create_or_join(data):
-        raw_code = data.get('room_code') or data.get('code') # support both 'room_code' and 'code' for backward compatibility with older frontend versions
-        room_code = raw_code.strip().upper() if raw_code else ''
+        raw_room_code = data.get('room_code') or data.get('code') # support both 'room_code' and 'code' for backward compatibility with older frontend versions
+        room_code = raw_room_code.strip().upper() if raw_room_code else ''
         player_name = data.get('name')
         sid = request.sid
 
@@ -133,23 +133,7 @@ def handle_socket_events(socketio):
     @socketio.on('player_quit_room')
     def handle_player_quit_room(data):
         room_code = data.get('room_code')
-        if not room_code: room_code = data.get('code') # fallback to 'code' for backward compatibility with older frontend versions
         emit('force_quit_lobby', {}, room=room_code, include_self=False)
-        save_room(room_code, None) 
-
-    @socketio.on('rejoin_session')
-    def handle_rejoin_session(data):
-        room_code = data.get('room_code')
-        role = data.get('role')
-        if room_code:
-            join_room(room_code)
-            room_data = get_room(room_code)
-            if room_data:
-                if role == 'host' and room_data.get('player1'):
-                    room_data['player1']['sid'] = request.sid
-                elif role == 'guest' and room_data.get('player2'):
-                    room_data['player2']['sid'] = request.sid
-                save_room(room_code, room_data)
 
     @socketio.on('fire_shot')
     def handle_shot(data):

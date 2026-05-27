@@ -240,8 +240,7 @@ function App() {
         padding: '20px'
       }}>
 
-        {/* UPDATE 6: Tombol Quit di Kiri Atas Waiting Room */}
-        <button
+        <button 
           onClick={() => {
             socket.emit('player_quit_room', { room_code: roomData.code });
             setScreen('LOBBY');
@@ -251,7 +250,6 @@ function App() {
         >
           ← QUIT LOBBY
         </button>
-
         {/* Injeksi Animasi CSS untuk Efek Helikopter Melayang */}
         <style>{`
           @keyframes floatHeli {

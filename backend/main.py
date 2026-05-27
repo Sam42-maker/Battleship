@@ -1,6 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
-
 from flask import Flask
 from flask_cors import CORS 
 from flask_socketio import SocketIO
@@ -10,7 +7,7 @@ app = Flask(__name__)
 CORS(app) 
 
 app.register_blueprint(routes_bp)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 handle_socket_events(socketio)
 
