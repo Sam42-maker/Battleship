@@ -9,7 +9,8 @@ def handle_socket_events(socketio):
     
     @socketio.on('create_or_join_room')
     def handle_create_or_join(data):
-        room_code = data.get('room_code').strip().upper()
+        raw_code = data.get('room_code') or data.get('code') # support both 'room_code' and 'code' for backward compatibility with older frontend versions
+        room_code = raw_code.strip().upper() if raw_code else ''
         player_name = data.get('name')
         sid = request.sid
 
