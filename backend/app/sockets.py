@@ -56,6 +56,7 @@ def handle_socket_events(socketio):
     @socketio.on('start_battle')
     def handle_start_battle(data):
         room_code = data.get('room_code')
+        if not room_code: room_code = data.get('code') # fallback to 'code' for backward compatibility with older frontend versions
         room_data = get_room(room_code)
 
         if room_data and room_data['player1']['sid'] == request.sid:
@@ -72,6 +73,7 @@ def handle_socket_events(socketio):
     @socketio.on('player_ready_combat') # <-- Event name has been aligned with the frontend
     def handle_player_ready_combat(data):
         room_code = data.get('room_code')
+        if not room_code: room_code = data.get('code') # fallback to 'code' for backward compatibility with older frontend versions
         room_data = get_room(room_code)
         
         if room_data:
@@ -97,6 +99,7 @@ def handle_socket_events(socketio):
     @socketio.on('player_ready_rematch') # sychronize rematch readiness between players
     def handle_rematch(data):
         room_code = data.get('room_code')
+        if not room_code: room_code = data.get('code')
         role = data.get('role')
         room_data = get_room(room_code)
         if room_data:
@@ -134,6 +137,7 @@ def handle_socket_events(socketio):
     @socketio.on('fire_shot')
     def handle_shot(data):
         room_code = data.get('room_code')
+        if not room_code: room_code = data.get('code')
         # forward shot target to opponent through socket
         if 'targets' in data and isinstance(data['targets'], list):
             emit('receive_shot', {'targets': data['targets']}, room=room_code, include_self=False)
@@ -145,6 +149,7 @@ def handle_socket_events(socketio):
     @socketio.on('shot_result_report')
     def handle_shot_result_report(data):
         room_code = data.get('room_code')
+        if not room_code: room_code = data.get('code')
         # send shot evaluation result back to the shooter
         emit('update_enemy_radar', {
             'hits': data.get('hits', []),
