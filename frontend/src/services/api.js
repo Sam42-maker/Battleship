@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// Use port 5000 according to the Flask backend configuration
-const API_URL = 'http://localhost:5000'; 
+const API_URL = 'http://34.128.96.47:5000';
 
 export const saveBoard = async (playerId, boardData) => {
     try {

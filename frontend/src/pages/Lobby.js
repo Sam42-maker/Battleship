@@ -84,7 +84,6 @@ const Lobby = ({ onBack }) => {
                 <div style={{ fontSize: '11px', color: '#22c55e', letterSpacing: '3px', marginBottom: '10px', fontWeight: 'bold' }}>HQ MULTIPLAYER LINK</div>
                 <h1 style={{ fontSize: '2.2rem', margin: '0 0 10px 0', letterSpacing: '1px', fontWeight: '800' }}>MULTIPLAYER LOBBY</h1>
                 <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '35px' }}>Link your radar coordinates with your allied or enemy fleet.</p>
-                
                 {/* NAME INPUT FIELD */}
                 <div style={{ marginBottom: '20px', textAlign: 'left' }}>
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '1px' }}>CAPTAIN NAME :</label>
