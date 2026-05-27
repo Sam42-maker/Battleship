@@ -91,46 +91,50 @@ const GameRoom = ({ mode, roomData, onBack }) => {
         onBack();
       });
 
+      // === KODE RESET DIMASUKKAN KE SINI AGAR AMAN DARI MEMORY LEAK ===
+      const handleInitPlacement = () => {
+        // 1. Bersihkan susunan papan grid kita dan musuh kembali jadi air (0)
+        setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
+        setEnemyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
+        setBotActualGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
+
+        // 2. Reset semua status gameplay ke kondisi awal sebelum bertempur
+        setIsCombatStarted(false);
+        setIsGameOver(false);
+        setGameResult("");
+        setIsReady(false);
+        setPlacedShips([]);
+        setSelectedShip(null);
+        setActiveSkill(null);
+        setStatusMessage("PLACEMENT PHASE: Susun armada Anda, Kapten!");
+        
+        // Tentukan siapa yang jalan duluan (Host otomatis jalan duluan)
+        setIsMyTurn(mode === 'SOLO' ? true : (roomData?.role === 'host'));
+
+        // 3. Reset array data kapal ke kondisi awal (Sesuaikan properti ini dengan inisialisasi awal kodemu)
+        setShips([
+          { name: "Carrier", size: 5, skillname: "Jet Strike", area: [3, 3], cooldown: 5, currentCD: 0, hp: 5, sunk: false },
+          { name: "Battleship", size: 4, skillname: "Artillery Barrage", area: [1, 4], cooldown: 4, currentCD: 0, hp: 4, sunk: false },
+          { name: "Cruiser", size: 3, skillname: "Sonar Pulse", area: [3, 1], cooldown: 3, currentCD: 0, hp: 3, sunk: false },
+          { name: "Submarine", size: 3, skillname: "Torpedo Launch", area: [1, 3], cooldown: 3, currentCD: 0, hp: 3, sunk: false },
+          { name: "Destroyer", size: 2, skillname: "Flak Cannon", area: [2, 2], cooldown: 2, currentCD: 0, hp: 2, sunk: false }
+        ]);
+
+        // 4. Bersihkan status tombol penanda rematch lokal
+        setRematchStatus({ hostReady: false, guestReady: false });
+      };
+
+      socket.on('init_placement', handleInitPlacement);
+
+      // === CLEANUP SEMUA LISTENER SAAT KOMPONEN DITUTUP ===
       return () => {
         socket.off('enemy_ready_status'); socket.off('start_multiplayer_combat');
         socket.off('receive_shot'); socket.off('update_enemy_radar');
         socket.off('rematch_update'); socket.off('force_quit_lobby');
+        socket.off('init_placement', handleInitPlacement); // <-- pembersih init_placement ditambahkan
       };
     }
   }, [mode, myGrid, ships, roomData]);
-
-  // === TAMBAHKAN LISTENER INI UNTUK MERESET GAME ===
-    socket.on('init_placement', () => {
-      // 1. Bersihkan susunan papan grid kita dan musuh kembali jadi air (0)
-      setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
-      setEnemyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
-      setBotActualGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
-
-      // 2. Reset semua status gameplay ke kondisi awal sebelum bertempur
-      setIsCombatStarted(false);
-      setIsGameOver(false);
-      setGameResult("");
-      setIsReady(false);
-      setPlacedShips([]);
-      setSelectedShip(null);
-      setActiveSkill(null);
-      setStatusMessage("PLACEMENT PHASE: Susun armada Anda, Kapten!");
-      
-      // Tentukan siapa yang jalan duluan (Host otomatis jalan duluan)
-      setIsMyTurn(mode === 'SOLO' ? true : (roomData?.role === 'host'));
-
-      // 3. Reset array data kapal ke kondisi awal (Sesuaikan properti ini dengan inisialisasi awal kodemu)
-      setShips([
-        { name: "Carrier", size: 5, skillname: "Jet Strike", area: [3, 3], cooldown: 5, currentCD: 0, hp: 5, sunk: false },
-        { name: "Battleship", size: 4, skillname: "Artillery Barrage", area: [1, 4], cooldown: 4, currentCD: 0, hp: 4, sunk: false },
-        { name: "Cruiser", size: 3, skillname: "Sonar Pulse", area: [3, 1], cooldown: 3, currentCD: 0, hp: 3, sunk: false },
-        { name: "Submarine", size: 3, skillname: "Torpedo Launch", area: [1, 3], cooldown: 3, currentCD: 0, hp: 3, sunk: false },
-        { name: "Destroyer", size: 2, skillname: "Flak Cannon", area: [2, 2], cooldown: 2, currentCD: 0, hp: 2, sunk: false }
-      ]);
-
-      // 4. Bersihkan status tombol penanda rematch lokal
-      setRematchStatus({ hostReady: false, guestReady: false });
-    });
 
   // --- BOT GENERATOR (KHUSUS SOLO) ---
   useEffect(() => {
@@ -280,7 +284,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
    } else {
   // Siapa pun yang ditembak, sekarang giliran kamu yang membalas!
   setIsMyTurn(true);
-  setStatusMessage(hits.length > 0 ? "DANGER! Our ship just took a hit! Your turn to attack." : "Enemy missed! Your turn to attack.");
+  setStatusMessage(hitAny > 0 ? "DANGER! Our ship just took a hit! Your turn to attack." : "Enemy missed! Your turn to attack.");
     }
   };
 
