@@ -684,6 +684,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
             isOpponent={false}
             selectedShip={!isCombatStarted ? selectedShip : null}
             orientation={orientation}
+            placedShips={placedShips}
           />
         </div>
 
