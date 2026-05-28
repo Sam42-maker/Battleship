@@ -85,7 +85,13 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
             cursor: (isOpponent || selectedShip) ? 'crosshair' : 'default',
             transition: 'background-color 0.2s',
             opacity: activeSkill && isOpponent ? getSkillPreviewOpacity() : 1,
-            boxShadow: getSkillBoxShadow(r, c)
+            boxShadow: getSkillBoxShadow(r, c),
+            
+            // --- ANIMASI HIT/MISS MULTIPLAYER ---
+            backgroundImage: cell === 3 ? "url('/hit.gif')" : cell === 2 ? "url('/miss_gif.gif')" : 'none',
+            backgroundSize: '120%', k
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
           }}
         />
       )))}
