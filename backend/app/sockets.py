@@ -1,8 +1,7 @@
-
 from flask_socketio import emit, join_room, leave_room
 from flask import request
 from .rabbit_mq import publish_move
-from .redis_store import get_room, save_room
+from .redis_store import get_room, save_room, delete_room
 import json
 
 def handle_socket_events(socketio):
@@ -130,10 +129,26 @@ def handle_socket_events(socketio):
                 # 3. Send a signal to all players in that room to enter the placement phase again
                 emit('init_placement', {}, room=room_code)
 
+
+    # handle_rejoin event is triggered when a player refreshes the page during a game session. This will allow them to rejoin the same Socket.IO room and continue receiving real-time updates without losing their game state.
+    @socketio.on('rejoin_room')
+    def handle_rejoin(data):
+        room_code = data.get('room_code')
+        if room_code:
+            join_room(room_code)
+            print(f"Player rejoined room {room_code} after refresh")
+
+    # player_quit_room event is triggered when a player leaves the room, either by clicking "Exit Room" or closing the browser tab. This will notify the opponent and clean up the room data in Redis.
     @socketio.on('player_quit_room')
     def handle_player_quit_room(data):
         room_code = data.get('room_code')
+        # notify opponent in the same room that the player has quit, so they can be redirected back to the lobby or show a message
         emit('force_quit_lobby', {}, room=room_code, include_self=False)
+        
+        # destroy room data in Redis and leave the Socket.IO room to clean up resources
+        if room_code:
+            delete_room(room_code)
+            leave_room(room_code)
 
     @socketio.on('fire_shot')
     def handle_shot(data):

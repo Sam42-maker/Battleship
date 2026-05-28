@@ -19,6 +19,17 @@ function App() {
     sessionStorage.setItem('roomData', JSON.stringify(roomData));
   }, [screen, mode, roomData]);
 
+  // FASE 1: Re-join room secara diam-diam jika terjadi Refresh
+  useEffect(() => {
+    if (roomData.code && (screen === 'WAITING' || screen === 'MULTIPLAYER_COMBAT')) {
+      socket.emit('rejoin_room', { 
+        room_code: roomData.code, 
+        role: roomData.role,
+        name: roomData.role === 'host' ? roomData.player1 : roomData.player2
+      });
+    }
+  }, []);
+
   useEffect(() => {
     // === LISTENING FOR BACKEND RESPONSES ===
     
@@ -74,6 +85,18 @@ function App() {
   const handleStartBattle = () => {
     // Only the Host button is active and can start the game
     socket.emit('start_battle', { room_code: roomData.code });
+  };
+
+  const handleQuitWaitingRoom = () => {
+    if (window.confirm("Are you sure you want to disband/leave the room?")) {
+      socket.emit('player_quit_room', { room_code: roomData.code, role: roomData.role });
+      
+      // Bersihkan penyimpanan browser
+      sessionStorage.clear();
+      setRoomData({ code: '', role: '', player1: null, player2: null });
+      setMode(null);
+      setScreen('MENU'); // Kembali ke Menu Utama
+    }
   };
 
   // --- BASE STYLES ---
@@ -240,16 +263,19 @@ function App() {
         padding: '20px'
       }}>
 
+        {/* FASE 1: UPDATE TOMBOL LEAVE ROOM AGAR COCOK DENGAN BACKEND */}
         <button 
-          onClick={() => {
-            socket.emit('player_quit_room', { room_code: roomData.code });
-            setScreen('LOBBY');
-            setRoomData({ code: '', role: '', player1: null, player2: null });
+          onClick={handleQuitWaitingRoom}
+          style={{ 
+            position: 'absolute', top: 20, left: 20, padding: '10px 20px', 
+            backgroundColor: '#ef4444', color: 'white', border: 'none', 
+            borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', 
+            zIndex: 10, boxShadow: '0 4px 6px rgba(0,0,0,0.3)' 
           }}
-          style={{ position: 'absolute', top: 20, left: 20, padding: '10px 20px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 }}
         >
-          ← QUIT LOBBY
+          ❌ LEAVE ROOM
         </button>
+        
         {/* Injeksi Animasi CSS untuk Efek Helikopter Melayang */}
         <style>{`
           @keyframes floatHeli {
