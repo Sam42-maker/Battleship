@@ -22,6 +22,8 @@ const GameRoom = ({ mode, roomData, onBack }) => {
 
   // --- MULTIPLAYER REMATCH STATES ---
   const [rematchStatus, setRematchStatus] = useState({ hostReady: false, guestReady: false });
+  const [isShaking, setIsShaking] = useState(false);
+  const [visualFx, setVisualFx] = useState(null);
 
   // --- FLEET HEALTH STATES ---
   const initialShips = [
@@ -35,6 +37,15 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   const [ships, setShips] = useState(JSON.parse(JSON.stringify(initialShips)));
   const [enemyShips, setEnemyShips] = useState(JSON.parse(JSON.stringify(initialShips)));
   const [botPlacedShips, setBotPlacedShips] = useState([]);
+
+  const triggerCombatFx = (type) => {
+    setVisualFx(type);
+    if (type === 'HIT' || type === 'DANGER') {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+    }
+    setTimeout(() => setVisualFx(null), 1100);
+  };
 
   const handleResetBoard = () => {
     setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
@@ -123,8 +134,16 @@ const GameRoom = ({ mode, roomData, onBack }) => {
         if (sunkShips.length > 0) {
           setEnemyShips(prev => prev.map(s => sunkShips.includes(s.name) ? { ...s, sunk: true, hp: 0 } : s));
           setStatusMessage(`💥 ENEMY ${sunkShips.join(', ')} SHIP(S) DESTROYED!`);
+          triggerCombatFx('HIT'); // Tambahkan efek ledakan saat kapal tenggelam
         } else {
-          setStatusMessage(hits.length > 0 ? "✅ HIT! Your turn again." : "❌ MISS! Enemy turn.");
+          // --- FASE 5: INJEKSI ANIMASI HIT/MISS MULTIPLAYER ---
+          if (hits.length > 0) {
+            triggerCombatFx('HIT'); 
+            setStatusMessage(`🎯 DIRECT HIT! Fire again.`);
+          } else {
+            triggerCombatFx('MISS'); 
+            setStatusMessage("❌ MISS! Enemy turn.");
+          }
         }
 
         // Keep player's turn if we hit something; switch turn on miss
@@ -310,13 +329,13 @@ const GameRoom = ({ mode, roomData, onBack }) => {
       if (botActualGrid[x][y] === 1) {
         localEnemyGrid[x][y] = 3; // Hit
         hitAny = true;
-        // Simulasi damage ke bot
+        
         const hitShipPlacement = botPlacedShips.find(p => {
           const s = enemyShips.find(es => es.name === p.name);
-          for (let i = 0; i < s.size; i++) {
+          for(let i=0; i<s.size; i++) {
             let cx = p.orientation === 'H' ? p.x : p.x + i;
             let cy = p.orientation === 'H' ? p.y + i : p.y;
-            if (cx === x && cy === y) return true;
+            if(cx === x && cy === y) return true;
           }
           return false;
         });
@@ -338,19 +357,26 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     reduceCooldowns();
 
     if (localEnemyShips.every(s => s.sunk)) {
-      setGameResult("WIN"); setIsGameOver(true);
-      setStatusMessage("VICTORY! The bot fleet has been destroyed."); return;
+      setGameResult("WIN"); 
+      setIsGameOver(true);
+      setStatusMessage("VICTORY! The bot fleet has been destroyed."); 
+      return;
     }
 
     if (hitAny) {
-      setStatusMessage(sunkThisTurn.length > 0 ? `BOOM! ${sunkThisTurn.join(', ')} destroyed!` : "Hit! Fire again.");
+      triggerCombatFx('HIT'); // 🔥 ANIMASI: Kita berhasil menembak musuh!
+      setStatusMessage(sunkThisTurn.length > 0 ? `💥 BOOM! ${sunkThisTurn.join(', ')} DESTROYED!` : "🎯 HIT! Fire again, Captain!");
     } else {
-      // Siapa pun yang ditembak, sekarang giliran kamu yang membalas!
-      setIsMyTurn(true);
-      setStatusMessage(hits.length > 0 ? "DANGER! Our ship just took a hit! Your turn to attack." : "Enemy missed! Your turn to attack.");
+      triggerCombatFx('MISS'); // 🌊 ANIMASI: Tembakan kita meleset ke air!
+      setIsMyTurn(false);
+      setStatusMessage("❌ MISS! Waiting for Bot counter-attack...");
+      
+      // Mengaktifkan giliran serangan balasan Bot secara otomatis setelah 1.5 detik
+      setTimeout(() => {
+        executeBotTurn();
+      }, 1500);
     }
   };
-
   const executeBotTurn = () => {
     let localMyGrid = [...myGrid.map(r => [...r])];
     let localShips = [...ships];
@@ -361,7 +387,8 @@ const GameRoom = ({ mode, roomData, onBack }) => {
       if (localMyGrid[bx][by] !== 2 && localMyGrid[bx][by] !== 3) {
         const targetName = localMyGrid[bx][by];
         if (typeof targetName === 'string') {
-          localMyGrid[bx][by] = 3; hitAny = true;
+          localMyGrid[bx][by] = 3; 
+          hitAny = true;
           const sIdx = localShips.findIndex(s => s.name === targetName);
           localShips[sIdx].hp -= 1;
           if (localShips[sIdx].hp <= 0) localShips[sIdx].sunk = true;
@@ -376,15 +403,17 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     setShips(localShips);
 
     if (localShips.every(s => s.sunk)) {
-      setGameResult("LOSE"); setIsGameOver(true); return;
+      setGameResult("LOSE"); 
+      setIsGameOver(true); 
+      return;
     }
 
-    // Bot hanya menembak 1 kali, lalu giliran selalu kembali ke kamu
     setIsMyTurn(true);
     if (hitAny) {
-      setStatusMessage("Bot hit our ship! Your turn to attack.");
+      triggerCombatFx('DANGER'); // 🚨 ANIMATION: The screen shakes violently as our ship is destroyed!
+      setStatusMessage("⚠️ DANGER! Bot hit our ship! Return fire immediately!");
     } else {
-      setStatusMessage("Bot missed! Your turn.");
+      setStatusMessage("💨 Whew! Bot missed their shot. Your turn to attack!");
     }
   };
 
@@ -426,7 +455,15 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     } else {
       // Siapa pun yang ditembak, sekarang giliran kamu yang membalas!
       setIsMyTurn(true);
-      setStatusMessage(hits.length > 0 ? "DANGER! Our ship just took a hit! Your turn to attack." : "Enemy missed! Your turn to attack.");
+      
+      // --- FASE 5: INJEKSI ANIMASI DANGER MULTIPLAYER ---
+      if (hits.length > 0) {
+        triggerCombatFx('DANGER'); // Layar berguncang karena serangan lawan asli!
+        setStatusMessage("🚨 ALARM! Our fleet took damage! Your turn to strike back!");
+      } else {
+        triggerCombatFx('MISS'); // Efek air karena musuh meleset
+        setStatusMessage("🌊 Enemy missed their coordinates! Your turn to fire!");
+      }
     }
   };
   // --- ACTIONS ---
