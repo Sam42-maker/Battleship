@@ -104,47 +104,43 @@ def handle_socket_events(socketio):
             join_room(room_code)
             print(f"Player rejoined room {room_code} after refresh")
 
-    # request_rematch event is triggered when a player clicks the "Play Again" button after a game ends. This will update the rematch status in Redis and notify both players about the rematch readiness. Once both players are ready, it will reset the game state and signal them to start placing ships again.
     @socketio.on('request_rematch')
     def handle_rematch(data):
         room_code = data.get('room_code')
-        role = data.get('role')  # 'host' atau 'guest'
+        role = data.get('role')
         
         if not room_code:
             return
 
-        # Ambil data room dari Redis
         room_data = get_room(room_code)
         if not room_data:
             return
 
-        # Inisialisasi status rematch di data room jika belum ada
+        # Inisialisasi status rematch jika belum ada di Redis
         if 'rematch' not in room_data:
             room_data['rematch'] = {'host': False, 'guest': False}
 
-        # Tandai player yang meminta rematch sebagai True
+        # Tandai player yang siap
         if role == 'host':
             room_data['rematch']['host'] = True
         elif role == 'guest':
             room_data['rematch']['guest'] = True
 
-        # Simpan kembali status terbaru ke Redis
         save_room(room_code, room_data)
 
-        # Beritahu kedua player di dalam room mengenai status siap tanding ulang
+        # Broadcast status kesiapan rematch ke kedua pemain
         emit('rematch_status_update', {
             'hostReady': room_data['rematch']['host'],
             'guestReady': room_data['rematch']['guest']
         }, room=room_code)
 
-        # Cek jika KEDUA player sudah menekan tombol PLAY AGAIN
+        # Jika KEDUA pemain sudah menekan PLAY AGAIN, reset room dan mulai ulang!
         if room_data['rematch']['host'] and room_data['rematch']['guest']:
-            # Reset status rematch di Redis untuk game berikutnya nanti
             room_data['rematch'] = {'host': False, 'guest': False}
             room_data['status'] = 'placement'
             save_room(room_code, room_data)
 
-            # Kirim sinyal ke kedua frontend untuk masuk ke layar penempatan kapal lagi!
+            # Trigger penempatan kapal ulang untuk semua pemain di room tersebut
             emit('init_placement', {}, room=room_code)
 
     # player_quit_room event is triggered when a player leaves the room, either by clicking "Exit Room" or closing the browser tab. This will notify the opponent and clean up the room data in Redis.

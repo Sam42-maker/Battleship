@@ -88,7 +88,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
               guestReady: data.guestReady
             });
           });
-          
+
       socket.on('force_quit_lobby', () => {
         alert("The enemy has abandoned the battle. Returning to Lobby.");
         onBack();
@@ -133,6 +133,13 @@ const GameRoom = ({ mode, roomData, onBack }) => {
 
       // 4. Bersihkan status tombol penanda rematch lokal
       setRematchStatus({ hostReady: false, guestReady: false });
+    });
+
+    socket.on('rematch_status_update', (data) => {
+      setRematchStatus({
+        hostReady: data.hostReady,
+        guestReady: data.guestReady
+      });
     });
 
   // --- BOT GENERATOR (KHUSUS SOLO) ---
