@@ -125,11 +125,11 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
         if (!imgPath) return null;
 
         const isH = ship.orientation === 'H';
-        // Hitung koordinat piksel: ukuran cell 30px + gap 2px = 32px
         const topOffset = ship.x * 32; 
         const leftOffset = ship.y * 32;
-        const width = isH ? (ship.size * 30 + (ship.size - 1) * 2) : 30;
-        const height = !isH ? (ship.size * 30 + (ship.size - 1) * 2) : 30;
+        
+        // Panjang kapal selalu dihitung horizontal dulu
+        const shipLength = ship.size * 30 + (ship.size - 1) * 2;
 
         return (
           <img 
@@ -140,10 +140,12 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
               position: 'absolute',
               top: `${topOffset}px`,
               left: `${leftOffset}px`,
-              width: `${width}px`,
-              height: `${height}px`,
+              width: `${shipLength}px`,
+              height: `30px`, // Tinggi selalu 30px (1 kotak)
+              transformOrigin: '15px 15px', // Poros rotasi di tengah kotak grid pertama
+              transform: isH ? 'none' : 'rotate(90deg)', // Putar 90 derajat jika vertikal
               zIndex: 2, 
-              pointerEvents: 'none', // Sangat penting agar tidak menghalangi klik ke kotak di bawahnya
+              pointerEvents: 'none', 
               filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.6))'
             }}
           />
@@ -166,8 +168,8 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
         const isH = orientation === 'H';
         const topOffset = hoveredCell.x * 32;
         const leftOffset = hoveredCell.y * 32;
-        const width = isH ? (selectedShip.size * 30 + (selectedShip.size - 1) * 2) : 30;
-        const height = !isH ? (selectedShip.size * 30 + (selectedShip.size - 1) * 2) : 30;
+        
+        const shipLength = selectedShip.size * 30 + (selectedShip.size - 1) * 2;
 
         return (
           <img 
@@ -177,11 +179,13 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
               position: 'absolute',
               top: `${topOffset}px`,
               left: `${leftOffset}px`,
-              width: `${width}px`,
-              height: `${height}px`,
+              width: `${shipLength}px`,
+              height: `30px`,
+              transformOrigin: '15px 15px',
+              transform: isH ? 'none' : 'rotate(90deg)',
               zIndex: 3,
               pointerEvents: 'none',
-              opacity: 0.6, // Tembus pandang karena masih pre-view
+              opacity: 0.6,
               filter: 'brightness(1.5) drop-shadow(0 0 10px #4ade80)'
             }}
           />
