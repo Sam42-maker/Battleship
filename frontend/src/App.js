@@ -114,11 +114,14 @@ function App() {
         <style>{`
           /* Night ocean background & tactical radar grid */
           .ocean-bg {
-            position: absolute; inset: 0;
-            background-image: url('/bg-menu.jpg');
-            background-position: center;
+            position: absolute; 
+            inset: 0;
+            background-image: url('/bg-menu.jpg'); 
+            background-repeat: no-repeat;  
+            background-size: cover;        
+            background-position: center;   
             z-index: 0;
-            opacity: 0.6; /* Digelapkan sengaja agar UI Menu menonjol tajam */
+            opacity: 0.5;    
           }
           .tactical-grid {
             position: absolute; inset: 0;
