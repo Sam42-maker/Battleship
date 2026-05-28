@@ -89,7 +89,7 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
             
             // --- ANIMASI HIT/MISS MULTIPLAYER ---
             backgroundImage: cell === 3 ? "url('/hit.gif')" : cell === 2 ? "url('/miss_gif.gif')" : 'none',
-            backgroundSize: '120%', k
+            backgroundSize: '120%',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
           }}
