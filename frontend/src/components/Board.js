@@ -73,7 +73,7 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
     if (isOpponent) {
       if (val === 2) return '#cbd5e1'; // Miss statis
       if (val === 3) return '#ef4444'; // Hit statis
-      return 'transparent';
+      return '#3c76ff';
     } else {
       if (val === 2) return '#cbd5e1'; 
       if (val === 3) return '#ef4444'; 
