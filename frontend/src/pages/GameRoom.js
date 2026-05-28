@@ -7,11 +7,11 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   const [myGrid, setMyGrid] = useState(Array(10).fill(null).map(() => Array(10).fill(0)));
   const [enemyGrid, setEnemyGrid] = useState(Array(10).fill(null).map(() => Array(10).fill(0)));
   const [botActualGrid, setBotActualGrid] = useState(Array(10).fill(null).map(() => Array(10).fill(0)));
-  
+
   // --- GAME STATES ---
   const [isCombatStarted, setIsCombatStarted] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [gameResult, setGameResult] = useState(""); 
+  const [gameResult, setGameResult] = useState("");
   const [isMyTurn, setIsMyTurn] = useState(mode === 'SOLO' ? true : (roomData?.role === 'host'));
   const [statusMessage, setStatusMessage] = useState("PLACEMENT PHASE: Deploy your fleet, Captain!");
   const [selectedShip, setSelectedShip] = useState(null);
@@ -36,6 +36,63 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   const [enemyShips, setEnemyShips] = useState(JSON.parse(JSON.stringify(initialShips)));
   const [botPlacedShips, setBotPlacedShips] = useState([]);
 
+  const handleResetBoard = () => {
+    setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
+    setPlacedShips([]);
+    setStatusMessage("Board cleared. Deploy your fleet manually or use Randomize!");
+  };
+
+  // function for randomly placing fleet on the grid
+  const handleRandomizeFleet = () => {
+    const fleetToPlace = [
+      { id: 'carrier', length: 5 },
+      { id: 'battleship', length: 4 },
+      { id: 'cruiser', length: 3 },
+      { id: 'submarine', length: 3 },
+      { id: 'patrol_boat', length: 2 }
+    ];
+
+    let tempGrid = Array(10).fill(null).map(() => Array(10).fill(0));
+    let tempPlaced = [];
+
+    // helper function to check if a ship can be placed at the given position and orientation without overlapping or going out of bounds
+    const canPlace = (grid, r, c, length, orient) => {
+      if (orient === 'H') {
+        if (c + length > 10) return false;
+        for (let i = 0; i < length; i++) if (grid[r][c + i] !== 0) return false;
+      } else {
+        if (r + length > 10) return false;
+        for (let i = 0; i < length; i++) if (grid[r + i][c] !== 0) return false;
+      }
+      return true;
+    };
+
+    // randomly place each ship in the fleet on the grid
+    fleetToPlace.forEach(ship => {
+      let placed = false;
+      while (!placed) {
+        let r = Math.floor(Math.random() * 10);
+        let c = Math.floor(Math.random() * 10);
+        let orient = Math.random() > 0.5 ? 'H' : 'V';
+
+        if (canPlace(tempGrid, r, c, ship.length, orient)) {
+          // point the grid
+          for (let i = 0; i < ship.length; i++) {
+            if (orient === 'H') tempGrid[r][c + i] = 1;
+            else tempGrid[r + i][c] = 1;
+          }
+          tempPlaced.push({ id: ship.id, length: ship.length, coordinates: { r, c }, orientation: orient });
+          placed = true;
+        }
+      }
+    });
+
+    setMyGrid(tempGrid);
+    setPlacedShips(tempPlaced);
+    setSelectedShip(null);
+    setStatusMessage("Fleet coordinates randomized! Ready for combat.");
+  };
+
   // --- SOCKET LISTENERS (KHUSUS MULTIPLAYER) ---
   useEffect(() => {
     if (mode === 'MULTIPLAYER') {
@@ -50,8 +107,8 @@ const GameRoom = ({ mode, roomData, onBack }) => {
 
       socket.on('receive_shot', (data) => handleIncomingMultiplayerShot(data.targets));
 
-      
-    
+
+
       socket.on('update_enemy_radar', (data) => {
         console.log('received update_enemy_radar', data);
         const { hits, misses, sunkShips, allSunk } = data;
@@ -83,11 +140,11 @@ const GameRoom = ({ mode, roomData, onBack }) => {
       });
 
       socket.on('rematch_status_update', (data) => {
-            setRematchStatus({
-              hostReady: data.hostReady,
-              guestReady: data.guestReady
-            });
-          });
+        setRematchStatus({
+          hostReady: data.hostReady,
+          guestReady: data.guestReady
+        });
+      });
 
       socket.on('force_quit_lobby', () => {
         alert("The enemy has abandoned the battle. Returning to Lobby.");
@@ -103,44 +160,44 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   }, [mode, myGrid, ships, roomData]);
 
   // === TAMBAHKAN LISTENER INI UNTUK MERESET GAME ===
-    socket.on('init_placement', () => {
-      // 1. Bersihkan susunan papan grid kita dan musuh kembali jadi air (0)
-      setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
-      setEnemyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
-      setBotActualGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
+  socket.on('init_placement', () => {
+    // 1. Bersihkan susunan papan grid kita dan musuh kembali jadi air (0)
+    setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
+    setEnemyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
+    setBotActualGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
 
-      // 2. Reset semua status gameplay ke kondisi awal sebelum bertempur
-      setIsCombatStarted(false);
-      setIsGameOver(false);
-      setGameResult("");
-      setIsReady(false);
-      setPlacedShips([]);
-      setSelectedShip(null);
-      setActiveSkill(null);
-      setStatusMessage("PLACEMENT PHASE: Susun armada Anda, Kapten!");
-      
-      // Tentukan siapa yang jalan duluan (Host otomatis jalan duluan)
-      setIsMyTurn(mode === 'SOLO' ? true : (roomData?.role === 'host'));
+    // 2. Reset semua status gameplay ke kondisi awal sebelum bertempur
+    setIsCombatStarted(false);
+    setIsGameOver(false);
+    setGameResult("");
+    setIsReady(false);
+    setPlacedShips([]);
+    setSelectedShip(null);
+    setActiveSkill(null);
+    setStatusMessage("PLACEMENT PHASE: Susun armada Anda, Kapten!");
 
-      // 3. Reset array data kapal ke kondisi awal (Sesuaikan properti ini dengan inisialisasi awal kodemu)
-      setShips([
-        { name: "Carrier", size: 5, skillname: "Jet Strike", area: [3, 3], cooldown: 5, currentCD: 0, hp: 5, sunk: false },
-        { name: "Battleship", size: 4, skillname: "Artillery Barrage", area: [1, 4], cooldown: 4, currentCD: 0, hp: 4, sunk: false },
-        { name: "Cruiser", size: 3, skillname: "Sonar Pulse", area: [3, 1], cooldown: 3, currentCD: 0, hp: 3, sunk: false },
-        { name: "Submarine", size: 3, skillname: "Torpedo Launch", area: [1, 3], cooldown: 3, currentCD: 0, hp: 3, sunk: false },
-        { name: "Destroyer", size: 2, skillname: "Flak Cannon", area: [2, 2], cooldown: 2, currentCD: 0, hp: 2, sunk: false }
-      ]);
+    // Tentukan siapa yang jalan duluan (Host otomatis jalan duluan)
+    setIsMyTurn(mode === 'SOLO' ? true : (roomData?.role === 'host'));
 
-      // 4. Bersihkan status tombol penanda rematch lokal
-      setRematchStatus({ hostReady: false, guestReady: false });
+    // 3. Reset array data kapal ke kondisi awal (Sesuaikan properti ini dengan inisialisasi awal kodemu)
+    setShips([
+      { name: "Carrier", size: 5, skillname: "Jet Strike", area: [3, 3], cooldown: 5, currentCD: 0, hp: 5, sunk: false },
+      { name: "Battleship", size: 4, skillname: "Artillery Barrage", area: [1, 4], cooldown: 4, currentCD: 0, hp: 4, sunk: false },
+      { name: "Cruiser", size: 3, skillname: "Sonar Pulse", area: [3, 1], cooldown: 3, currentCD: 0, hp: 3, sunk: false },
+      { name: "Submarine", size: 3, skillname: "Torpedo Launch", area: [1, 3], cooldown: 3, currentCD: 0, hp: 3, sunk: false },
+      { name: "Destroyer", size: 2, skillname: "Flak Cannon", area: [2, 2], cooldown: 2, currentCD: 0, hp: 2, sunk: false }
+    ]);
+
+    // 4. Bersihkan status tombol penanda rematch lokal
+    setRematchStatus({ hostReady: false, guestReady: false });
+  });
+
+  socket.on('rematch_status_update', (data) => {
+    setRematchStatus({
+      hostReady: data.hostReady,
+      guestReady: data.guestReady
     });
-
-    socket.on('rematch_status_update', (data) => {
-      setRematchStatus({
-        hostReady: data.hostReady,
-        guestReady: data.guestReady
-      });
-    });
+  });
 
   // --- BOT GENERATOR (KHUSUS SOLO) ---
   useEffect(() => {
@@ -256,10 +313,10 @@ const GameRoom = ({ mode, roomData, onBack }) => {
         // Simulasi damage ke bot
         const hitShipPlacement = botPlacedShips.find(p => {
           const s = enemyShips.find(es => es.name === p.name);
-          for(let i=0; i<s.size; i++) {
+          for (let i = 0; i < s.size; i++) {
             let cx = p.orientation === 'H' ? p.x : p.x + i;
             let cy = p.orientation === 'H' ? p.y + i : p.y;
-            if(cx === x && cy === y) return true;
+            if (cx === x && cy === y) return true;
           }
           return false;
         });
@@ -287,10 +344,10 @@ const GameRoom = ({ mode, roomData, onBack }) => {
 
     if (hitAny) {
       setStatusMessage(sunkThisTurn.length > 0 ? `BOOM! ${sunkThisTurn.join(', ')} destroyed!` : "Hit! Fire again.");
-   } else {
-  // Siapa pun yang ditembak, sekarang giliran kamu yang membalas!
-  setIsMyTurn(true);
-  setStatusMessage(hits.length > 0 ? "DANGER! Our ship just took a hit! Your turn to attack." : "Enemy missed! Your turn to attack.");
+    } else {
+      // Siapa pun yang ditembak, sekarang giliran kamu yang membalas!
+      setIsMyTurn(true);
+      setStatusMessage(hits.length > 0 ? "DANGER! Our ship just took a hit! Your turn to attack." : "Enemy missed! Your turn to attack.");
     }
   };
 
@@ -340,9 +397,9 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     targets.forEach(cell => {
       const { x, y } = cell;
       const targetVal = localMyGrid[x][y];
-      
+
       if (typeof targetVal === 'string') {
-        localMyGrid[x][y] = 3; hits.push({x, y});
+        localMyGrid[x][y] = 3; hits.push({ x, y });
         const sIdx = localShips.findIndex(s => s.name === targetVal);
         if (sIdx !== -1) {
           localShips[sIdx].hp -= 1;
@@ -352,7 +409,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
           }
         }
       } else if (targetVal === 0) {
-        localMyGrid[x][y] = 2; misses.push({x, y});
+        localMyGrid[x][y] = 2; misses.push({ x, y });
       }
     });
 
@@ -367,10 +424,10 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     if (isAllSunk) {
       setGameResult("LOSE"); setIsGameOver(true);
     } else {
-  // Siapa pun yang ditembak, sekarang giliran kamu yang membalas!
-  setIsMyTurn(true);
-  setStatusMessage(hits.length > 0 ? "DANGER! Our ship just took a hit! Your turn to attack." : "Enemy missed! Your turn to attack.");
-}
+      // Siapa pun yang ditembak, sekarang giliran kamu yang membalas!
+      setIsMyTurn(true);
+      setStatusMessage(hits.length > 0 ? "DANGER! Our ship just took a hit! Your turn to attack." : "Enemy missed! Your turn to attack.");
+    }
   };
   // --- ACTIONS ---
   const handlePlayAgain = () => {
@@ -429,7 +486,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
               <span>{ship.name.toUpperCase()}</span>
               <span style={{ color: isSunk ? '#fca5a5' : '#fff' }}>{isSunk ? "💥 SUNK!" : `HP: ${ship.hp}/${ship.size}`}</span>
             </div>
-            
+
             {/* Skill button only for our fleet when in combat and it is our turn */}
             {!isEnemy && isCombatStarted && !isSunk && (
               <button
@@ -438,7 +495,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
                 style={{
                   width: '100%', padding: '8px', fontSize: '10px', fontWeight: 'bold', borderRadius: '4px', border: 'none',
                   backgroundColor: ship.currentCD > 0 ? '#6b7280' : isSkillActive ? '#f59e0b' : '#2563eb',
-                  color: 'white', 
+                  color: 'white',
                   cursor: (!isMyTurn || ship.currentCD > 0) ? 'not-allowed' : 'pointer',
                   opacity: !isMyTurn ? 0.6 : 1,
                   transform: isSkillActive ? 'scale(1.05)' : 'scale(1)',
@@ -451,19 +508,19 @@ const GameRoom = ({ mode, roomData, onBack }) => {
 
             {/* Enemy skill status indicator & turn info */}
             {isEnemy && isCombatStarted && !isSunk && (
-               <div style={{ fontSize: '9px', color: ship.currentCD > 0 ? '#f59e0b' : '#22c55e', fontWeight: 'bold' }}>
-                 {ship.currentCD > 0 ? `⏳ CD: ${ship.currentCD}` : `⚡ READY`}
-               </div>
+              <div style={{ fontSize: '9px', color: ship.currentCD > 0 ? '#f59e0b' : '#22c55e', fontWeight: 'bold' }}>
+                {ship.currentCD > 0 ? `⏳ CD: ${ship.currentCD}` : `⚡ READY`}
+              </div>
             )}
           </div>
         );
       })}
-      
+
       {/* Turn Indicator */}
       {isCombatStarted && (
-        <div style={{ 
-          marginTop: '10px', 
-          padding: '10px', 
+        <div style={{
+          marginTop: '10px',
+          padding: '10px',
           backgroundColor: isEnemy ? '#1f2937' : (isMyTurn ? '#065f46' : '#7c2d12'),
           borderRadius: '6px',
           border: `2px solid ${isEnemy ? '#6b7280' : (isMyTurn ? '#10b981' : '#f97316')}`,
@@ -536,7 +593,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', color: 'white', padding: '20px', fontFamily: 'Arial' }}>
       <button onClick={handleQuit} style={{ position: 'absolute', top: 20, left: 20, padding: '8px 15px', backgroundColor: '#334155', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>← QUIT</button>
-      
+
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h2 style={{ color: '#00f2fe', margin: '0 0 10px 0' }}>BATTLESHIP HARBOR</h2>
         <div style={{ backgroundColor: '#1e293b', padding: '12px 25px', borderRadius: '20px', display: 'inline-block', border: '1px solid #334155', fontWeight: 'bold', color: isMyTurn && isCombatStarted ? '#4ade80' : '#cbd5e1' }}>
@@ -544,9 +601,9 @@ const GameRoom = ({ mode, roomData, onBack }) => {
         </div>
       </div>
 
-{/* ================= MAIN MAP & PANEL CONTAINER ================= */}
+      {/* ================= MAIN MAP & PANEL CONTAINER ================= */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap', marginTop: '20px' }}>
-        
+
         {/* 1. LEFT INTERACTIVE PANEL: TACTICAL COMMANDS (Only appears during combat) */}
         {isCombatStarted && (
           <div style={{ backgroundColor: '#1e293b', padding: '20px', borderRadius: '10px', width: '250px', border: '1px solid #ef4444' }}>
@@ -584,12 +641,12 @@ const GameRoom = ({ mode, roomData, onBack }) => {
         {/* 3. RIGHT MAP: OUR FLEET BOARD */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <h4 style={{ color: '#3b82f6', marginBottom: '10px' }}>🛡️ MY NAVAL MAP</h4>
-          <Board 
-            grid={myGrid} 
-            onCellClick={(x, y) => !isCombatStarted && handlePlaceShip(x, y)} 
-            isOpponent={false} 
-            selectedShip={!isCombatStarted ? selectedShip : null} 
-            orientation={orientation} 
+          <Board
+            grid={myGrid}
+            onCellClick={(x, y) => !isCombatStarted && handlePlaceShip(x, y)}
+            isOpponent={false}
+            selectedShip={!isCombatStarted ? selectedShip : null}
+            orientation={orientation}
           />
         </div>
 
@@ -612,6 +669,23 @@ const GameRoom = ({ mode, roomData, onBack }) => {
                   );
                 })}
               </div>
+              {/* 5. RANDOMIZE & RESET BUTTONS */}
+            {!isReady && !isCombatStarted && (
+              <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'center' }}>
+                <button
+                  onClick={handleRandomizeFleet}
+                  style={{ padding: '10px 15px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  🎲 RANDOMIZE
+                </button>
+                <button
+                  onClick={handleResetBoard}
+                  style={{ padding: '10px 15px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  🗑️ CLEAR BOARD
+                </button>
+              </div>
+            )}
               <button onClick={handleReady} disabled={isReady} style={readyBtnStyle}>
                 {isReady ? "LOCKING CODES..." : "LOCK FLEET FORMATION"}
               </button>
@@ -647,7 +721,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
               {gameResult === "WIN" ? "🎉 VICTORY CAPTAIN!" : "💀 DEFEAT CAPTAIN!"}
             </h1>
             <h3 style={{ color: '#fff', marginBottom: '25px' }}>Wanna play again? Or quit and back to lobby again?</h3>
-            
+
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
               <button onClick={handlePlayAgain} style={{ padding: '12px 24px', backgroundColor: '#22c55e', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
                 🔄 PLAY AGAIN
