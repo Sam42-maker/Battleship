@@ -50,6 +50,8 @@ const GameRoom = ({ mode, roomData, onBack }) => {
 
       socket.on('receive_shot', (data) => handleIncomingMultiplayerShot(data.targets));
 
+      
+    
       socket.on('update_enemy_radar', (data) => {
         console.log('received update_enemy_radar', data);
         const { hits, misses, sunkShips, allSunk } = data;
@@ -79,13 +81,14 @@ const GameRoom = ({ mode, roomData, onBack }) => {
           setIsMyTurn(false);
         }
       });
-    
 
-      socket.on('rematch_update', (data) => {
-        setRematchStatus(data);
-        if (data.hostReady && data.guestReady) resetGameSession();
-      });
-
+      socket.on('rematch_status_update', (data) => {
+            setRematchStatus({
+              hostReady: data.hostReady,
+              guestReady: data.guestReady
+            });
+          });
+          
       socket.on('force_quit_lobby', () => {
         alert("The enemy has abandoned the battle. Returning to Lobby.");
         onBack();
@@ -94,7 +97,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
       return () => {
         socket.off('enemy_ready_status'); socket.off('start_multiplayer_combat');
         socket.off('receive_shot'); socket.off('update_enemy_radar');
-        socket.off('rematch_update'); socket.off('force_quit_lobby');
+        socket.off('rematch_status_update'); socket.off('force_quit_lobby');
       };
     }
   }, [mode, myGrid, ships, roomData]);
@@ -364,10 +367,24 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   };
   // --- ACTIONS ---
   const handlePlayAgain = () => {
-    if (mode === 'SOLO') resetGameSession();
-    else socket.emit('request_rematch', { room_code: roomData.code, role: roomData.role });
+    if (mode === 'SOLO') {
+      // Jika bermain melawan BOT, langsung reset grid secara lokal
+      setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
+      setEnemyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
+      setIsGameOver(false);
+      setGameResult("");
+      setIsCombatStarted(false);
+      setIsReady(false);
+      setPlacedShips([]);
+      setStatusMessage("PLACEMENT PHASE: Deploy your fleet, Captain!");
+    } else {
+      // FASE 2: Jika MULTIPLAYER, kirim sinyal ke backend bahwa kita siap tanding ulang
+      socket.emit('request_rematch', {
+        room_code: roomData.code,
+        role: roomData.role
+      });
+    }
   };
-
   const resetGameSession = () => {
     setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
     setEnemyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
