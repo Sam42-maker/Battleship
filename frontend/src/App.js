@@ -12,6 +12,8 @@ function App() {
     return saved ? JSON.parse(saved) : { code: '', role: '', player1: null, player2: null };
   });
 
+  const [showRules, setShowRules] = useState(false);
+
   // UPDATE 3: Menyimpan data otomatis setiap kali state berubah
   useEffect(() => {
     sessionStorage.setItem('screen', screen);
@@ -113,8 +115,11 @@ function App() {
           /* Night ocean background & tactical radar grid */
           .ocean-bg {
             position: absolute; inset: 0;
-            background: radial-gradient(circle at center, #0a192f 0%, #020c1b 100%);
+            background-image: url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
             z-index: 0;
+            opacity: 0.25; /* Digelapkan sengaja agar UI Menu menonjol tajam */
           }
           .tactical-grid {
             position: absolute; inset: 0;
@@ -122,6 +127,32 @@ function App() {
             background-size: 40px 40px;
             background-position: center;
             z-index: 1;
+          }
+
+          /* FASE 3: CSS Pop-up Aturan Game & Tombol Tanda Tanya */
+          .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(2, 12, 27, 0.85); z-index: 100;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(6px);
+          }
+          .modal-content {
+            background: rgba(15, 32, 67, 0.98);
+            border: 2px solid #00fff0; border-radius: 16px;
+            width: 90%; max-width: 600px; max-height: 80vh;
+            overflow-y: auto; padding: 35px; color: white;
+            box-shadow: 0 0 30px rgba(0, 255, 240, 0.3);
+          }
+          .help-btn {
+            position: absolute; top: 25px; right: 25px;
+            width: 45px; height: 45px; border-radius: 50%;
+            background: rgba(15, 32, 67, 0.8); border: 2px solid #00fff0;
+            color: #00fff0; font-size: 22px; font-weight: bold;
+            cursor: pointer; z-index: 50; transition: all 0.3s ease;
+          }
+          .help-btn:hover {
+            background: #00fff0; color: #020c1b; transform: scale(1.1);
+            box-shadow: 0 0 15px #00fff0;
           }
           
           /* Sea wave animation */
@@ -216,6 +247,46 @@ function App() {
         <div className="wave"></div>
         <div className="wave-front"></div>
 
+        {/* FASE 3: TOMBOL '?' & MODAL ATURAN PERMAINAN */}
+        <button className="help-btn" onClick={() => setShowRules(true)} title="Game Rules & Fleet Skills">?</button>
+
+        {showRules && (
+          <div className="modal-overlay" onClick={() => setShowRules(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h2 style={{ color: '#00fff0', margin: '0 0 20px 0', textAlign: 'center', letterSpacing: '2px', fontWeight: '900' }}>⚓ BATTLE STATION MANUAL</h2>
+              
+              <div style={{ marginBottom: '25px' }}>
+                <h3 style={{ color: '#00ff88', borderBottom: '1px solid #00ff88', paddingBottom: '5px', fontSize: '1.1rem', letterSpacing: '1px' }}>🎛️ SYSTEM PROTOCOLS</h3>
+                <ul style={{ paddingLeft: '20px', lineHeight: '1.6', color: '#cbd5e1' }}>
+                  <li style={{ marginBottom: '8px' }}><b>Placement Fleet:</b> Deploy 5 ships on a 10x10 Tactical Grid. You can rotate them (Horizontal/Vertical). <i style={{ color: '#ffaa00' }}>Note: Cannot replace it when you already place it on grid.</i></li>
+                  <li style={{ marginBottom: '8px' }}><b>Combat Phase:</b> It the combat between two people or bot fight each other. If hit and miss it will be turn other player.</li>
+                  <li><b>Paired Rematch:</b> Each player can do match again / play again.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 style={{ color: '#38bdf8', borderBottom: '1px solid #38bdf8', paddingBottom: '5px', fontSize: '1.1rem', letterSpacing: '1px' }}>🚀 SPECIAL ABILITIES (SKILLS)</h3>
+                <ul style={{ listStyleType: 'none', padding: 0, lineHeight: '1.9', color: '#cbd5e1' }}>
+                  <li style={{ marginBottom: '6px' }}>✈️ <b>Carrier (5 slots):</b> <span style={{ color: '#fff' }}>Jet Strike</span> (3x6 AoE Grid) | <i>Cooldown: 10 turns</i></li>
+                  <li style={{ marginBottom: '6px' }}>🔭 <b>Battleship (4 slots):</b> <span style={{ color: '#fff' }}>Large Attack</span> (2x4 AoE Grid) | <i>Cooldown: 6 turns</i></li>
+                  <li style={{ marginBottom: '6px' }}>🚤 <b>Cruiser (3 slots):</b> <span style={{ color: '#fff' }}>Row Barrage</span> (2x3 AoE Grid) | <i>Cooldown: 4 turns</i></li>
+                  <li style={{ marginBottom: '6px' }}>🌠 <b>Submarine (3 slots):</b> <span style={{ color: '#fff' }}>Torpedo</span> (3x2 AoE Grid) | <i>Cooldown: 4 turns</i></li>
+                  <li style={{ marginBottom: '6px' }}>📡 <b>Patrol Boat (2 slots):</b> <span style={{ color: '#fff' }}>Scout Radar</span> (1x2 AoE Grid) | <i>Cooldown: 2 turns</i></li>
+                </ul>
+                <p style={{ marginTop: '20px', fontStyle: 'italic', color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', fontWeight: 'bold' }}>
+                  * If every hit on ship slots depend on ship slots if all hit, it will Sunk.
+                </p>
+              </div>
+
+              <div style={{ textAlign: 'center', marginTop: '30px' }}>
+                <button onClick={() => setShowRules(false)} style={{ padding: '10px 30px', background: 'linear-gradient(90deg, #00fff0, #00a8ff)', border: 'none', color: '#020c1b', fontWeight: 'bold', borderRadius: '6px', cursor: 'pointer', fontSize: '1rem', letterSpacing: '1px' }}>
+                  DISMISS LOGS
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Main menu center content */}
         <div className="menu-card">
           <div style={{ fontSize: '12px', color: '#00fff0', letterSpacing: '4px', marginBottom: '5px', fontWeight: 'bold' }}>TACTICAL BATTLESTATION</div>
@@ -275,7 +346,7 @@ function App() {
         >
           ❌ LEAVE ROOM
         </button>
-        
+
         {/* Injeksi Animasi CSS untuk Efek Helikopter Melayang */}
         <style>{`
           @keyframes floatHeli {
