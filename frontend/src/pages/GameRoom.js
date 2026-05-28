@@ -37,14 +37,13 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   const [botPlacedShips, setBotPlacedShips] = useState([]);
 
   const handleResetBoard = () => {
-    // Mengosongkan papan seketika
     setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
     setPlacedShips([]);
     setStatusMessage("Board cleared. Deploy your fleet manually or use Randomize!");
   };
 
+  // function for randomly placing fleet on the grid
   const handleRandomizeFleet = () => {
-    // 1. Daftar 5 kapal yang akan di-deploy otomatis
     const fleetToPlace = [
       { id: 'carrier', length: 5 },
       { id: 'battleship', length: 4 },
@@ -56,7 +55,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     let tempGrid = Array(10).fill(null).map(() => Array(10).fill(0));
     let tempPlaced = [];
 
-    // 2. Logika internal komputer agar saat auto-deploy kapal tidak tumpang tindih
+    // helper function to check if a ship can be placed at the given position and orientation without overlapping or going out of bounds
     const canPlace = (grid, r, c, length, orient) => {
       if (orient === 'H') {
         if (c + length > 10) return false;
@@ -68,7 +67,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
       return true;
     };
 
-    // 3. Komputer langsung melempar 5 kapal ke posisi acak dalam kedipan mata!
+    // randomly place each ship in the fleet on the grid
     fleetToPlace.forEach(ship => {
       let placed = false;
       while (!placed) {
@@ -77,21 +76,21 @@ const GameRoom = ({ mode, roomData, onBack }) => {
         let orient = Math.random() > 0.5 ? 'H' : 'V';
 
         if (canPlace(tempGrid, r, c, ship.length, orient)) {
+          // point the grid
           for (let i = 0; i < ship.length; i++) {
             if (orient === 'H') tempGrid[r][c + i] = 1;
             else tempGrid[r + i][c] = 1;
           }
           tempPlaced.push({ id: ship.id, length: ship.length, coordinates: { r, c }, orientation: orient });
-          placed = true; // Lanjut ke kapal berikutnya
+          placed = true;
         }
       }
     });
 
-    // 4. Langsung tampilkan kapal yang sudah tersusun ke layar! (Instant Deploy)
     setMyGrid(tempGrid);
     setPlacedShips(tempPlaced);
-    setSelectedShip(null); 
-    setStatusMessage("🎲 Auto-Deploy Complete! Your fleet is randomly placed.");
+    setSelectedShip(null);
+    setStatusMessage("Fleet coordinates randomized! Ready for combat.");
   };
 
   // --- SOCKET LISTENERS (KHUSUS MULTIPLAYER) ---
@@ -673,13 +672,13 @@ const GameRoom = ({ mode, roomData, onBack }) => {
               {/* 5. RANDOMIZE & RESET BUTTONS */}
             {!isReady && !isCombatStarted && (
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'center' }}>
-                <button 
+                <button
                   onClick={handleRandomizeFleet}
                   style={{ padding: '10px 15px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
-                  🎲 AUTO RANDOMIZE
+                  🎲 RANDOMIZE
                 </button>
-                <button 
+                <button
                   onClick={handleResetBoard}
                   style={{ padding: '10px 15px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
