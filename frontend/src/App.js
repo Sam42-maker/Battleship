@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import GameRoom from './pages/GameRoom';
 import Lobby from './pages/Lobby';
 import socket from './services/socket'; // Import socket
+import jetGif from './assets/projectiles/jet.gif';
+import battleshipPng from './assets/ships/battleship.png';
 
 function App() {
   // UPDATE 2: Membaca memori browser (sessionStorage) agar tahan refresh
@@ -108,9 +110,8 @@ function App() {
 
     if (screen === 'MENU') {
     return (
-      <div className="battleship-theme" style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContents: 'center', backgroundColor: '#020c1b', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", overflow: 'hidden', color: '#fff' }}>
+      <div className="battleship-theme" style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#020c1b', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", overflow: 'hidden', color: '#fff' }}>
         
-        {/* INJECT ANIMATION AND BATTLE DECOR CSS */}
         <style>{`
           /* Night ocean background & tactical radar grid */
           .ocean-bg {
@@ -131,7 +132,6 @@ function App() {
             z-index: 1;
           }
 
-          /* FASE 3: CSS Pop-up Aturan Game & Tombol Tanda Tanya */
           .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(2, 12, 27, 0.85); z-index: 100;
@@ -171,21 +171,23 @@ function App() {
             z-index: 4;
           }
 
-          /* WARSHIP ANIMATION */
+          /* WARSHIP ANIMATION WITH REAL PNG IMAGE */
           .warship {
-            position: absolute; bottom: 40px; left: -150px; font-size: 3rem;
+            position: absolute; bottom: 40px; left: -250px;
             filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
             animation: sailAway 25s linear infinite, shipFloat 3s ease-in-out infinite;
             z-index: 3;
           }
+          .warship img { width: 240px; height: auto; }
 
-          /* FIGHTER JET ANIMATION */
+          /* FIGHTER JET ANIMATION WITH GIF IMAGE */
           .fighter-jet {
-            position: absolute; top: 15%; right: -100px; font-size: 2rem; opacity: 0.8;
-            transform: scaleX(-1) rotate(-10deg);
+            position: absolute; top: 15%; right: -120px; opacity: 0.8;
+            transform: scaleX(-1); /* Flips the gif to point leftwards matching path flight direction */
             animation: jetFly 14s linear infinite;
             z-index: 2;
           }
+          .fighter-jet img { width: 100px; height: auto; }
 
           /* PATROL HELICOPTER ANIMATION */
           .helicopter {
@@ -194,11 +196,10 @@ function App() {
             z-index: 2;
           }
 
-          /* Keyframes Penunjang */
           @keyframes waveMove { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
           @keyframes shipFloat { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
-          @keyframes sailAway { 0% { left: -150px; } 100% { left: 110%; } }
-          @keyframes jetFly { 0% { right: -100px; top: 15%; } 30% { right: 110%; top: 35%; } 100% { right: 110%; } }
+          @keyframes sailAway { 0% { left: -250px; } 100% { left: 110%; } }
+          @keyframes jetFly { 0% { right: -120px; top: 15%; } 30% { right: 110%; top: 35%; } 100% { right: 110%; } }
           @keyframes heliPatrol { 
             0% { transform: translateY(0) translateX(0) scaleX(1); } 
             50% { transform: translateY(-15px) translateX(20px) scaleX(1); }
@@ -208,7 +209,7 @@ function App() {
           /* Pulsing military button effect */
           .menu-card {
             background: rgba(15, 32, 67, 0.85);
-            padding: 45px; borderRadius: 16px;
+            padding: 45px; border-radius: 16px;
             border: 2px solid #00fff0;
             box-shadow: 0 0 30px rgba(0, 255, 240, 0.2);
             text-align: center; width: 420px; z-index: 10;
@@ -240,16 +241,20 @@ function App() {
         <div className="ocean-bg"></div>
         <div className="tactical-grid"></div>
         
-        {/* Moving/warfare military objects */}
-        <div className="fighter-jet">🚀 ✈️</div>
+        {/* Render Image Elements instead of old text blocks */}
+        <div className="fighter-jet">
+            <img src={jetGif} alt="Jet Flight" />
+        </div>
         <div className="helicopter">🚁</div>
-        <div className="warship">🚢</div>
+        <div className="warship">
+            <img src={battleshipPng} alt="Naval Fleet" />
+        </div>
         
         {/* Water layers */}
         <div className="wave"></div>
         <div className="wave-front"></div>
 
-        {/* FASE 3: TOMBOL '?' & MODAL ATURAN PERMAINAN */}
+        {/* HELP PROTOCOLS MODAL */}
         <button className="help-btn" onClick={() => setShowRules(true)} title="Game Rules & Fleet Skills">?</button>
 
         {showRules && (
@@ -300,7 +305,6 @@ function App() {
             Choose your battle mode to begin the sea defense strategy.
           </p>
 
-          {/* Action buttons preserving previous state */}
           <button className="tactical-btn" onClick={() => { setMode('SOLO'); setScreen('GAME'); }}>
             🎛️ SOLO MODE (VS BOT)
           </button>
@@ -310,7 +314,7 @@ function App() {
           </button>
           
           <div style={{ marginTop: '25px', fontSize: '11px', color: '#4f5e7d' }}>
-            SECURE ENCRYPTED CONNECTION V2.0
+            Secure with the ship
           </div>
         </div>
       </div>

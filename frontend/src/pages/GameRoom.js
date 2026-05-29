@@ -134,9 +134,9 @@ const GameRoom = ({ mode, roomData, onBack }) => {
         if (sunkShips.length > 0) {
           setEnemyShips(prev => prev.map(s => sunkShips.includes(s.name) ? { ...s, sunk: true, hp: 0 } : s));
           setStatusMessage(`💥 ENEMY ${sunkShips.join(', ')} SHIP(S) DESTROYED!`);
-          triggerCombatFx('HIT'); // Tambahkan efek ledakan saat kapal tenggelam
+          triggerCombatFx('HIT');
         } else {
-          // --- FASE 5: INJEKSI ANIMASI HIT/MISS MULTIPLAYER ---
+          // INJEKSI ANIMASI HIT/MISS MULTIPLAYER ---
           if (hits.length > 0) {
             triggerCombatFx('HIT'); 
             setStatusMessage(`🎯 DIRECT HIT! Fire again.`);
@@ -178,14 +178,14 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     }
   }, [mode, myGrid, ships, roomData]);
 
-  // === TAMBAHKAN LISTENER INI UNTUK MERESET GAME ===
+  // === LISTENER IN THIS COMPONENT ===
   socket.on('init_placement', () => {
-    // 1. Bersihkan susunan papan grid kita dan musuh kembali jadi air (0)
+    // 1. Clear our grid and turn the enemy back into water (0)
     setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
     setEnemyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
     setBotActualGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
 
-    // 2. Reset semua status gameplay ke kondisi awal sebelum bertempur
+    // 2. Reset all gameplay statuses to their initial state before the battle
     setIsCombatStarted(false);
     setIsGameOver(false);
     setGameResult("");
@@ -195,10 +195,10 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     setActiveSkill(null);
     setStatusMessage("PLACEMENT PHASE: Susun armada Anda, Kapten!");
 
-    // Tentukan siapa yang jalan duluan (Host otomatis jalan duluan)
+    // Decide who goes first (The host automatically goes first)
     setIsMyTurn(mode === 'SOLO' ? true : (roomData?.role === 'host'));
 
-    // 3. Reset array data kapal ke kondisi awal (Sesuaikan properti ini dengan inisialisasi awal kodemu)
+    // 3. Reset the ship data array to its initial state (Adjust this property to match your code's initialization))
     setShips([
       { name: "Carrier", size: 5, skillname: "Jet Strike", area: [3, 3], cooldown: 5, currentCD: 0, hp: 5, sunk: false },
       { name: "Battleship", size: 4, skillname: "Artillery Barrage", area: [1, 4], cooldown: 4, currentCD: 0, hp: 4, sunk: false },
@@ -207,7 +207,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
       { name: "Destroyer", size: 2, skillname: "Flak Cannon", area: [2, 2], cooldown: 2, currentCD: 0, hp: 2, sunk: false }
     ]);
 
-    // 4. Bersihkan status tombol penanda rematch lokal
+    // 4. Clear the status of the local rematch button
     setRematchStatus({ hostReady: false, guestReady: false });
   });
 
@@ -357,21 +357,21 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     reduceCooldowns();
 
     if (localEnemyShips.every(s => s.sunk)) {
-      setGameResult("WIN"); 
+      setGameResult("WIN");
       setIsGameOver(true);
       setStatusMessage("VICTORY! The bot fleet has been destroyed."); 
       return;
     }
 
     if (hitAny) {
-      triggerCombatFx('HIT'); // 🔥 ANIMASI: Kita berhasil menembak musuh!
+      triggerCombatFx('HIT'); // 🔥 ANIMATION: shot get to enemy
       setStatusMessage(sunkThisTurn.length > 0 ? `💥 BOOM! ${sunkThisTurn.join(', ')} DESTROYED!` : "🎯 HIT! Fire again, Captain!");
     } else {
-      triggerCombatFx('MISS'); // 🌊 ANIMASI: Tembakan kita meleset ke air!
+      triggerCombatFx('MISS'); // 🌊 ANIMATION: shot get to water
       setIsMyTurn(false);
       setStatusMessage("❌ MISS! Waiting for Bot counter-attack...");
       
-      // Mengaktifkan giliran serangan balasan Bot secara otomatis setelah 1.5 detik
+      // Enable the Bot's counterattack automatically after 1.5 seconds
       setTimeout(() => {
         executeBotTurn();
       }, 1500);
@@ -453,15 +453,15 @@ const GameRoom = ({ mode, roomData, onBack }) => {
     if (isAllSunk) {
       setGameResult("LOSE"); setIsGameOver(true);
     } else {
-      // Siapa pun yang ditembak, sekarang giliran kamu yang membalas!
+      // Whoever got shot, now it's your turn to get even!
       setIsMyTurn(true);
       
-      // --- FASE 5: INJEKSI ANIMASI DANGER MULTIPLAYER ---
+      // INJEKSI ANIMASI DANGER MULTIPLAYER ---
       if (hits.length > 0) {
-        triggerCombatFx('DANGER'); // Layar berguncang karena serangan lawan asli!
+        triggerCombatFx('DANGER');
         setStatusMessage("🚨 ALARM! Our fleet took damage! Your turn to strike back!");
       } else {
-        triggerCombatFx('MISS'); // Efek air karena musuh meleset
+        triggerCombatFx('MISS');
         setStatusMessage("🌊 Enemy missed their coordinates! Your turn to fire!");
       }
     }
@@ -469,7 +469,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   // --- ACTIONS ---
   const handlePlayAgain = () => {
     if (mode === 'SOLO') {
-      // Jika bermain melawan BOT, langsung reset grid secara lokal
+      // Reset Bot
       setMyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
       setEnemyGrid(Array(10).fill(null).map(() => Array(10).fill(0)));
       setIsGameOver(false);
@@ -479,7 +479,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
       setPlacedShips([]);
       setStatusMessage("PLACEMENT PHASE: Deploy your fleet, Captain!");
     } else {
-      // FASE 2: Jika MULTIPLAYER, kirim sinyal ke backend bahwa kita siap tanding ulang
+      // Rematch again
       socket.emit('request_rematch', {
         room_code: roomData.code,
         role: roomData.role

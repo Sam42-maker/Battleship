@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import socket from '../services/socket';
+import jetGif from '../assets/projectiles/jet.gif';
+import battleshipPng from '../assets/ships/battleship.png';
 
 const Lobby = ({ onBack }) => {
     const [name, setName] = useState('');
@@ -12,38 +14,55 @@ const Lobby = ({ onBack }) => {
             return;
         }
         setIsLoading(true);
-        // Send request to backend to create/join room
         socket.emit('create_or_join_room', { 
             name: name, 
             room_code: roomCode 
         });
         
-        // Reset loading if no response in 3 seconds (guard against error/lag)
         setTimeout(() => setIsLoading(false), 3000); 
     };
 
-        return (
+    return (
         <div className="lobby-universe" style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#020c1b', color: 'white', overflow: 'hidden' }}>
             
-            {/* INJECT LOBBY REFACTOR STYLE WITHOUT BREAKING BUTTONS */}
             <style>{`
-                .lobby-bg-core { position: absolute; inset: 0; background: radial-gradient(circle at center, #0a192f 0%, #020c1b 100%); z-index: 0; }
+                /* Applied Rendering.png as background with opacity overlay for readability */
+                .lobby-bg-core { 
+                    position: absolute; 
+                    inset: 0; 
+                    background-image: url('/Rendering.png'); 
+                    background-size: cover;
+                    background-position: center;
+                    z-index: 0; 
+                }
+                .lobby-bg-core::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: radial-gradient(circle at center, rgba(10, 25, 47, 0.8) 0%, rgba(2, 12, 27, 0.95) 100%);
+                    z-index: 1;
+                }
                 .lobby-radar-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0, 255, 240, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 240, 0.02) 1px, transparent 1px); background-size: 50px 50px; background-position: center; z-index: 1; }
                 
-                /* Battle background animation */
-                .lobby-jet { position: absolute; top: 20%; left: -100px; font-size: 2.2rem; animation: jetFlyRight 18s linear infinite; z-index: 2; }
+                /* Battle background animation using image assets */
+                .lobby-jet { position: absolute; top: 20%; left: -120px; animation: jetFlyRight 18s linear infinite; z-index: 2; }
+                .lobby-jet img { width: 90px; height: auto; }
+                
                 .lobby-heli { position: absolute; top: 10%; right: 15%; font-size: 1.7rem; animation: heliFloatLobby 5s ease-in-out infinite alternate; }
-                .lobby-carrier { position: absolute; bottom: 30px; right: -200px; font-size: 3.5rem; animation: carrierSail 30s linear infinite; z-index: 3; filter: brightness(0.6); }
+                
+                /* Fllipped ship scaleX(-1) to match right-to-left animation direction */
+                .lobby-carrier { position: absolute; bottom: 30px; right: -250px; animation: carrierSail 30s linear infinite; z-index: 3; filter: brightness(0.6); transform: scaleX(-1); }
+                .lobby-carrier img { width: 220px; height: auto; }
 
                 /* Dynamic water layers */
                 .lobby-wave { position: absolute; bottom: 0; left: 0; width: 200%; height: 90px; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,42.4V120H0Z" fill="%230b2240" opacity="0.4"/></svg>') repeat-x; animation: waveLobby 15s linear infinite; z-index: 2; }
 
                 @keyframes waveLobby { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-                @keyframes jetFlyRight { 0% { left: -100px; top: 20%; } 40% { left: 110%; top: 10%; } 100% { left: 110%; } }
+                @keyframes jetFlyRight { 0% { left: -120px; top: 20%; } 40% { left: 110%; top: 10%; } 100% { left: 110%; } }
                 @keyframes heliFloatLobby { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-20px) rotate(-5deg); } }
-                @keyframes carrierSail { 0% { right: -200px; } 100% { right: 110%; } }
+                @keyframes carrierSail { 0% { right: -250px; } 100% { right: 110%; } }
 
-                /* Main center card sized for desktop, per design reference */
+                /* Main center card styled for desktop, per design reference */
                 .central-lobby-card {
                     background: rgba(11, 22, 44, 0.9);
                     border: 2px solid #22c55e;
@@ -74,9 +93,15 @@ const Lobby = ({ onBack }) => {
             {/* Animation components */}
             <div className="lobby-bg-core"></div>
             <div className="lobby-radar-grid"></div>
-            <div className="lobby-jet">✈️ 💥</div>
+            
+            {/* Replaced Text Emojis with Image tags */}
+            <div className="lobby-jet">
+                <img src={jetGif} alt="Animated Jet" />
+            </div>
             <div className="lobby-heli">🚁</div>
-            <div className="lobby-carrier">🚢</div>
+            <div className="lobby-carrier">
+                <img src={battleshipPng} alt="Realistic Battleship" />
+            </div>
             <div className="lobby-wave"></div>
 
             {/* Main center card */}
@@ -84,6 +109,7 @@ const Lobby = ({ onBack }) => {
                 <div style={{ fontSize: '11px', color: '#22c55e', letterSpacing: '3px', marginBottom: '10px', fontWeight: 'bold' }}>HQ MULTIPLAYER LINK</div>
                 <h1 style={{ fontSize: '2.2rem', margin: '0 0 10px 0', letterSpacing: '1px', fontWeight: '800' }}>MULTIPLAYER LOBBY</h1>
                 <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '35px' }}>Link your radar coordinates with your allied or enemy fleet.</p>
+                
                 {/* NAME INPUT FIELD */}
                 <div style={{ marginBottom: '20px', textAlign: 'left' }}>
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '1px' }}>CAPTAIN NAME :</label>
@@ -111,7 +137,7 @@ const Lobby = ({ onBack }) => {
                     />
                 </div>
 
-                {/* BUTTONS (Preserve original logic integration) */}
+                {/* BUTTONS */}
                 <button 
                     onClick={handleJoinCreate}
                     disabled={isLoading}

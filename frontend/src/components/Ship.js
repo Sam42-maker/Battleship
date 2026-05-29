@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Ship = ({ name, size }) => {
-    // Fungsi untuk memanggil gambar yang tepat berdasarkan nama kapal
+    // Function to call the correct image based on ship name
     const getShipImage = (shipName) => {
         const lowerName = shipName.toLowerCase();
         if (lowerName.includes('carrier')) return '/carrier.png';
@@ -44,7 +44,7 @@ const Ship = ({ name, size }) => {
                 </span>
             </div>
 
-            {/* FASE 6.2: MENAMPILKAN GAMBAR KAPAL */}
+            {/* Show ship image */}
             {shipImg ? (
                 <div style={{ width: '100%', height: '45px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <img 

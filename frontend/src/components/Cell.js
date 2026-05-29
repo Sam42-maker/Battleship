@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 const Cell = ({ value, onClick, onHover, onLeave, isOpponent, highlight }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Main color logic
+  // Main colour logic
   const getStyle = () => {
     // 1. PRIORITY: Skill highlight (Orange)
     if (highlight) {
@@ -23,7 +23,7 @@ const Cell = ({ value, onClick, onHover, onLeave, isOpponent, highlight }) => {
       case 3: // Hit
         return { backgroundColor: '#ff4d4d', boxShadow: '0 0 10px red' }; 
       default: // Empty sea
-        return { 
+        return {
           backgroundColor: isHovered ? 'rgba(255,255,255,0.3)' : '#007bff',
           border: '1px solid rgba(255,255,255,0.2)' 
         };

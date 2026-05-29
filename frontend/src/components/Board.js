@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Perhatikan kita menambahkan parameter `placedShips = []`
+// Note that we've added a new parameter, “placedShips,” to display ships that have already been placed
 const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orientation, placedShips = [] }) => {
   const [hoveredCell, setHoveredCell] = useState(null);
   const [animationTimestamps, setAnimationTimestamps] = useState({});
@@ -43,16 +43,16 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
 
   const getSkillBoxShadow = (r, c) => isSkillHover(r, c) ? '0 0 12px #f97316, inset 0 0 8px #ea580c' : 'none';
 
-  // LOGIKA WARNA BARU: Transparan jika Hit/Miss agar kapal di bawahnya tetap terlihat!
+  // === CELL COLOR LOGIC === //
   const getCellColor = (val, r, c) => {
     if (isOpponent) {
       if (val === 2) return 'rgba(203, 213, 225, 0.8)'; // Miss 
       if (val === 3) return 'rgba(239, 68, 68, 0.8)'; // Hit
-      return 'rgba(14, 165, 233, 0.25)'; // Biru musuh
+      return 'rgba(23, 199, 243, 0.86)'; // Biru musuh
     } else {
-      if (val === 2) return 'rgba(203, 213, 225, 0.8)'; 
-      if (val === 3) return 'rgba(239, 68, 68, 0.8)'; // Merah transparan saat kapal kena hit
-      if (typeof val === 'string') return 'transparent'; // KOSONGKAN warna map jika ada kapal
+      if (val === 2) return 'rgba(203, 213, 225, 0.8)';
+      if (val === 3) return 'rgba(239, 68, 68, 0.8)';
+      if (typeof val === 'string') return 'transparent';
       
       if (isHoveredForPlacement(r, c)) {
         let isValid = true;
@@ -63,7 +63,7 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
         }
         return isValid ? 'rgba(74, 222, 128, 0.5)' : 'rgba(248, 113, 113, 0.5)';
       }
-      return 'rgba(37, 99, 235, 0.4)'; // Biru laut kita
+      return 'rgba(23, 199, 243, 0.86)';
     }
   };
 
@@ -79,10 +79,9 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
   };
 
   return (
-    // Wadah utama harus "Relative" agar gambar bisa "Absolute" melayang di atasnya
     <div style={{ position: 'relative', display: 'inline-block' }} onMouseLeave={handleMouseLeave}>
       
-      {/* LAYER 1: GRID KOTAK-KOTAK AIR DAN HIT/MISS */}
+      {/* LAYER 1: GRID OF WATER SQUARES AND HIT/MISS */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 30px)', gap: '2px', position: 'relative', zIndex: 1 }}>
         {grid.map((row, r) => row.map((cell, c) => {
           const key = `${r}-${c}`;
@@ -111,7 +110,6 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
                 backgroundSize: '120%',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
-                // Ledakan Z-Index naik agar menutupi gambar kapal
                 zIndex: isCurrentlyAnimating ? 3 : 1 
               }}
             />
@@ -119,7 +117,7 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
         }))}
       </div>
 
-      {/* LAYER 2: KAPAL YANG SUDAH DILETAKKAN (PNG OVERLAY) */}
+      {/* LAYER 2: SHIPS ALREADY PLACED (PNG OVERLAY) */}
       {!isOpponent && placedShips.map((ship, index) => {
         const imgPath = getShipImage(ship.name);
         if (!imgPath) return null;
@@ -128,7 +126,7 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
         const topOffset = ship.x * 32; 
         const leftOffset = ship.y * 32;
         
-        // Panjang kapal selalu dihitung horizontal dulu
+        // The length of a ship is always measured horizontally first
         const shipLength = ship.size * 30 + (ship.size - 1) * 2;
 
         return (
@@ -141,9 +139,9 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
               top: `${topOffset}px`,
               left: `${leftOffset}px`,
               width: `${shipLength}px`,
-              height: `30px`, // Tinggi selalu 30px (1 kotak)
-              transformOrigin: '15px 15px', // Poros rotasi di tengah kotak grid pertama
-              transform: isH ? 'none' : 'rotate(90deg)', // Putar 90 derajat jika vertikal
+              height: `30px`, 
+              transformOrigin: '15px 15px',
+              transform: isH ? 'none' : 'rotate(90deg)',
               zIndex: 2, 
               pointerEvents: 'none', 
               filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.6))'
@@ -152,7 +150,7 @@ const Board = ({ grid, onCellClick, isOpponent, activeSkill, selectedShip, orien
         );
       })}
 
-      {/* LAYER 3: EFEK HOLOGRAM (GHOST) SAAT HOVER MELETAKKAN KAPAL */}
+      {/* LAYER 3: HOLOGRAM (GHOST) EFFECT WHEN PLACING THE SHIP IN A HOVER POSITION */}
       {!isOpponent && selectedShip && hoveredCell && (() => {
         let isValid = true;
         for(let i=0; i<selectedShip.size; i++) {
