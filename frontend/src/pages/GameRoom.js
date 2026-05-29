@@ -38,6 +38,17 @@ const GameRoom = ({ mode, roomData, onBack }) => {
   const [enemyShips, setEnemyShips] = useState(JSON.parse(JSON.stringify(initialShips)));
   const [botPlacedShips, setBotPlacedShips] = useState([]);
 
+  //  STATE ANIMASI JET ---
+  const [jetType, setJetType] = useState(null); 
+
+  const triggerJetStrike = (type = 'medium') => {
+    setJetType(type);
+    
+    // The jet will automatically disappear after 1.5 seconds (once its flight time is up)
+    setTimeout(() => {
+      setJetType(null);
+    }, 1500);
+  };
   const triggerCombatFx = (type) => {
     setVisualFx(type);
     if (type === 'HIT' || type === 'DANGER') {
@@ -131,17 +142,19 @@ const GameRoom = ({ mode, roomData, onBack }) => {
           return newGrid;
         });
 
+        triggerJetStrike('big');
+
         if (sunkShips.length > 0) {
           setEnemyShips(prev => prev.map(s => sunkShips.includes(s.name) ? { ...s, sunk: true, hp: 0 } : s));
           setStatusMessage(`💥 ENEMY ${sunkShips.join(', ')} SHIP(S) DESTROYED!`);
-          triggerCombatFx('HIT');
+          setTimeout(() => triggerCombatFx('HIT'), 500);
         } else {
           // INJEKSI ANIMASI HIT/MISS MULTIPLAYER ---
           if (hits.length > 0) {
-            triggerCombatFx('HIT'); 
+            setTimeout(() => triggerCombatFx('HIT'), 500); 
             setStatusMessage(`🎯 DIRECT HIT! Fire again.`);
           } else {
-            triggerCombatFx('MISS'); 
+            setTimeout(() => triggerCombatFx('MISS'), 500); 
             setStatusMessage("❌ MISS! Enemy turn.");
           }
         }
@@ -363,18 +376,22 @@ const GameRoom = ({ mode, roomData, onBack }) => {
       return;
     }
 
+    if (localEnemyShips.every(s => s.sunk)) {
+      setGameResult("WIN");
+      setIsGameOver(true);
+      setStatusMessage("VICTORY! The bot fleet has been destroyed."); 
+      return;
+    }
+
+    // --- PANGGIL JET TERBANG ---
+    triggerJetStrike('big'); 
+
     if (hitAny) {
-      triggerCombatFx('HIT'); // 🔥 ANIMATION: shot get to enemy
+      setTimeout(() => triggerCombatFx('HIT'), 500); // Delay 0.5 detik nunggu jet lewat
       setStatusMessage(sunkThisTurn.length > 0 ? `💥 BOOM! ${sunkThisTurn.join(', ')} DESTROYED!` : "🎯 HIT! Fire again, Captain!");
     } else {
-      triggerCombatFx('MISS'); // 🌊 ANIMATION: shot get to water
+      setTimeout(() => triggerCombatFx('MISS'), 500); // Delay nunggu jet lewat
       setIsMyTurn(false);
-      setStatusMessage("❌ MISS! Waiting for Bot counter-attack...");
-      
-      // Enable the Bot's counterattack automatically after 1.5 seconds
-      setTimeout(() => {
-        executeBotTurn();
-      }, 1500);
     }
   };
   const executeBotTurn = () => {
@@ -779,6 +796,50 @@ const GameRoom = ({ mode, roomData, onBack }) => {
           </div>
         </div>
       )}
+
+      {/* ========================================= */}
+      {/* FASE 6.3 & POP-UP ANIMATION CSS INJECTION */}
+      {/* ========================================= */}
+      <style>{`
+        @keyframes flyJetBy {
+          0% { transform: translateX(0) scale(0.8); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateX(120vw) scale(1.2); opacity: 0; }
+        }
+        @keyframes arcadePop {
+          0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+          30% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+          50% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+          100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+        }
+        .arcade-fx-overlay {
+          position: fixed; top: 45%; left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 99999; pointer-events: none;
+          font-family: 'Impact', 'Arial Black', sans-serif;
+          font-size: 4.5rem; font-weight: 900; letter-spacing: 4px;
+          text-shadow: 0 0 20px rgba(0,0,0,0.9), 0 10px 0px rgba(0,0,0,0.8);
+          animation: arcadePop 1.1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+      `}</style>
+
+      {/* POP-UP TEKS ARCADE */}
+      {visualFx === 'HIT' && <div className="arcade-fx-overlay" style={{ color: '#ff0055', WebkitTextStroke: '2px #fff' }}>💥 DIRECT HIT!</div>}
+      {visualFx === 'MISS' && <div className="arcade-fx-overlay" style={{ color: '#00d2ff', WebkitTextStroke: '2px #fff' }}>🌊 SPLASH! MISS</div>}
+      {visualFx === 'DANGER' && <div className="arcade-fx-overlay" style={{ color: '#ffea00', WebkitTextStroke: '2px #ff0000' }}>🚨 WE ARE HIT!</div>}
+
+      {/* ANIMASI JET TERBANG MELINTAS LAYAR */}
+      {jetType && (
+        <div style={{ position: 'fixed', top: '35%', left: '-20%', zIndex: 999999, pointerEvents: 'none', animation: 'flyJetBy 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards' }}>
+          <img 
+            src={jetType === 'big' ? '/big_jet.gif' : '/medium_jet.gif'} 
+            alt="Jet Strike" 
+            style={{ width: jetType === 'big' ? '450px' : '250px', filter: 'drop-shadow(-10px 20px 15px rgba(0,0,0,0.6))', transform: 'rotate(15deg)' }}
+          />
+        </div>
+      )}
+      
     </div>
   );
 };
