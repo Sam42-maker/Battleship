@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://34.128.122.121:5000';
+const API_URL = 'http://34.101.130.87:5000';
 
 export const saveBoard = async (playerId, boardData) => {
     try {
