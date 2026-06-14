@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 
-const socket = io('http://34.101.130.87:5000', {
+// Targetkan ke localhost port 5000 (Backend)
+const socket = io('http://localhost:5000', {
     transports: ['websocket'],
     autoConnect: true
 });
