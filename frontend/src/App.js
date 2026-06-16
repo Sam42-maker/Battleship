@@ -159,24 +159,22 @@ function App() {
           
           /* Sea wave animation */
           .wave {
-            position: absolute; bottom: 0; left: 0; width: 200%; height: 100px;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,42.4V120H0Z" fill="%230b2240" opacity="0.5"/></svg>') repeat-x;
-            animation: waveMove 12s linear infinite;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 60px;
+            background: rgba(11, 34, 64, 0.8);
             z-index: 2;
           }
           .wave-front {
-            position: absolute; bottom: 0; left: -50%; width: 200%; height: 80px;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,42.4V120H0Z" fill="%230f3460" opacity="0.8"/></svg>') repeat-x;
-            animation: waveMove 8s linear infinite reverse;
-            z-index: 4;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 30px;
+            background: rgba(15, 52, 96, 0.9);
+            z-index: 4; /* Layer ini menutupi lambung bawah kapal */
           }
 
-          /* WARSHIP ANIMATION WITH REAL PNG IMAGE */
+          /* WARSHIP ANIMATION */
           .warship {
-            position: absolute; bottom: 40px; left: -250px;
+            position: absolute; bottom: 22px; left: -250px; 
             filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
             animation: sailAway 25s linear infinite, shipFloat 3s ease-in-out infinite;
-            z-index: 3;
+            z-index: 3; /* Terjepit di tengah air */
           }
           .warship img { width: 240px; height: auto; }
 

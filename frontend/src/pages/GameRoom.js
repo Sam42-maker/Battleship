@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Board from '../components/Board';
 import socket from '../services/socket';
+import jetGif from '../assets/projectiles/jet.gif';
 
 const GameRoom = ({ mode, roomData, onBack }) => {
   // --- GRIDS STATE ---
@@ -805,7 +806,7 @@ const GameRoom = ({ mode, roomData, onBack }) => {
           0% { transform: translateX(0) scale(0.8); opacity: 0; }
           10% { opacity: 1; }
           90% { opacity: 1; }
-          100% { transform: translateX(120vw) scale(1.2); opacity: 0; }
+          100% { transform: translateX(-120vw) scale(1.2); opacity: 0; }
         }
         @keyframes arcadePop {
           0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
@@ -829,13 +830,18 @@ const GameRoom = ({ mode, roomData, onBack }) => {
       {visualFx === 'MISS' && <div className="arcade-fx-overlay" style={{ color: '#00d2ff', WebkitTextStroke: '2px #fff' }}>🌊 SPLASH! MISS</div>}
       {visualFx === 'DANGER' && <div className="arcade-fx-overlay" style={{ color: '#ffea00', WebkitTextStroke: '2px #ff0000' }}>🚨 WE ARE HIT!</div>}
 
-      {/* ANIMASI JET TERBANG MELINTAS LAYAR */}
+    {/* ANIMASI JET TERBANG MELINTAS LAYAR */}
       {jetType && (
-        <div style={{ position: 'fixed', top: '35%', left: '-20%', zIndex: 999999, pointerEvents: 'none', animation: 'flyJetBy 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards' }}>
+        <div style={{ position: 'fixed', top: '35%', right: '-20%', zIndex: 999999, pointerEvents: 'none', animation: 'flyJetBy 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards' }}>
           <img 
-            src={jetType === 'big' ? '/big_jet.gif' : '/medium_jet.gif'} 
+            src={jetGif} 
             alt="Jet Strike" 
-            style={{ width: jetType === 'big' ? '450px' : '250px', filter: 'drop-shadow(-10px 20px 15px rgba(0,0,0,0.6))', transform: 'rotate(15deg)' }}
+            style={{ 
+              width: '120px',
+              /* Bayangan disesuaikan karena arah cahaya berubah */
+              filter: 'drop-shadow(5px 10px 10px rgba(0,0,0,0.5))' 
+              /* Kode transform (flip) dihapus agar jet natural menghadap kiri dan maju */
+            }} 
           />
         </div>
       )}

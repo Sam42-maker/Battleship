@@ -3,6 +3,7 @@ import socket from '../services/socket';
 import jetGif from '../assets/projectiles/jet.gif';
 import battleshipPng from '../assets/ships/battleship.png';
 
+
 const Lobby = ({ onBack }) => {
     const [name, setName] = useState('');
     const [roomCode, setRoomCode] = useState('');
@@ -88,6 +89,22 @@ const Lobby = ({ onBack }) => {
                     font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s;
                     letter-spacing: 1px; margin-bottom: 15px;
                 }
+
+                .lobby-wave-back { 
+                    position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; 
+                    background: rgba(11, 34, 64, 0.8); z-index: 2; 
+                }
+                .lobby-wave-front { 
+                    position: absolute; bottom: 0; left: 0; width: 100%; height: 30px; 
+                    background: rgba(15, 52, 96, 0.9); z-index: 4; 
+                }
+
+                .lobby-carrier { 
+                    position: absolute; bottom: 22px; right: -250px; 
+                    animation: carrierSail 30s linear infinite, heliFloatLobby 4s ease-in-out infinite alternate; 
+                    z-index: 3; filter: brightness(0.6); transform: scaleX(-1); 
+                }
+                .lobby-carrier img { width: 220px; height: auto; }
             `}</style>
 
             {/* Animation components */}
